@@ -4,7 +4,7 @@
   <title><![CDATA[mttkay here.]]></title>
   <link href="http://mttkay.github.com/atom.xml" rel="self"/>
   <link href="http://mttkay.github.com/"/>
-  <updated>2013-10-13T19:51:54+02:00</updated>
+  <updated>2013-10-13T19:54:05+02:00</updated>
   <id>http://mttkay.github.com/</id>
   <author>
     <name><![CDATA[Matthias Käppler]]></name>
@@ -604,31 +604,6 @@ From the documentation of <a href="http://developer.android.com/reference/java/n
 <p>The emphasis here is on <em>may</em>: as you can see from the previous screenshot, it was the server
 that decided to terminate the connection at some point, and not our call to <code>disconnect</code>,
 since the first FIN is sent by the destination not the source.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[sandbox]]></title>
-    <link href="http://mttkay.github.com/blog/2013/02/23/sandbox/"/>
-    <updated>2013-02-23T21:08:00+01:00</updated>
-    <id>http://mttkay.github.com/blog/2013/02/23/sandbox</id>
-    <content type="html"><![CDATA[<h1>code test</h1>
-
-<figure class='code'><figcaption><span>test code  </span></figcaption>
- <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">foo</span><span class="o">(</span><span class="n">String</span> <span class="n">s</span><span class="o">)</span> <span class="o">{</span>
-</span><span class='line'>  <span class="c1">// ...</span>
-</span><span class='line'><span class="o">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h1>images</h1>
-
-<p>blah blah
-<img class="right" src="http://mttkay.github.com/images/email.png">
-blah blah</p>
 ]]></content>
   </entry>
   
