@@ -2,7 +2,7 @@
 layout: post
 title: "Monads: Your App As A Function"
 date: 2014-01-25 09:15
-published: false
+published: true
 comments: false
 categories:
 - functional programming
