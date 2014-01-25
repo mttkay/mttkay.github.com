@@ -1,0 +1,503 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Monads: Your App As A Function - mttkay here.</title>
+	<meta name="author" content="Matthias Käppler">
+
+	
+	<meta name="description" content="A paper by Twitter&#8217;s Marius Eriksen (&#8220;Your server as a function&#8221;), which introduces
+the key concepts behind Finagle is what made me &hellip;">
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="mttkay here." type="application/atom+xml">
+	<link rel="canonical" href="">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script async="true" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+</head>
+
+
+<body>
+	<header id="header" class="inner"><h1><a href="/">mttkay here.</a></h1>
+<nav id="main-nav"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</nav>
+<nav id="mobile-nav">
+	<div class="alignleft menu">
+		<a class="button">Menu</a>
+		<div class="container"><ul class="main">
+	<li><a href="/">Blog</a></li>
+	<li><a href="/blog/archives">Archives</a></li>
+</ul>
+</div>
+	</div>
+	<div class="alignright search">
+		<a class="button"></a>
+		<div class="container">
+			<form action="http://google.com/search" method="get">
+				<input type="text" name="q" results="0">
+				<input type="hidden" name="q" value="site:mttkay.github.com">
+			</form>
+		</div>
+	</div>
+</nav>
+<nav id="sub-nav" class="alignright">
+	<div class="social">
+		
+		
+		<a class="google" href="https://plus.google.com/112265135089213955243?rel=author" title="Google+">Google+</a>
+		
+		
+		<a class="twitter" href="http://twitter.com/mttkay" title="Twitter">Twitter</a>
+		
+		
+		<a class="github" href="https://github.com/mttkay" title="GitHub">GitHub</a>
+		
+    
+		
+		
+		
+		
+		
+		<a class="rss" href="/atom.xml" title="RSS">RSS</a>
+		
+    
+	</div>
+	<form class="search" action="http://google.com/search" method="get">
+		<input class="alignright" type="text" name="q" results="0">
+		<input type="hidden" name="q" value="site:mttkay.github.com">
+	</form>
+</nav>
+
+</header>
+	
+		
+<div id="banner" class="inner">
+	<div class="container">
+		<ul class="feed"></ul>
+	</div>
+	<small><a href="http://twitter.com/mttkay">mttkay</a> @ <a href="http://twitter.com">Twitter</a></small>
+	<div class="loading">Loading...</div>
+</div>
+<script src="/javascripts/twitter.js"></script>
+<script type="text/javascript">
+	(function($){
+		$('#banner').getTwitterFeed('mttkay', 4, false);
+	})(jQuery);
+</script>
+
+	
+	<div id="content" class="inner"><article class="post">
+	<h2 class="title">Monads: Your App as a Function</h2>
+	<div class="entry-content"><p>A paper by Twitter&#8217;s Marius Eriksen (<a href="http://monkey.org/~marius/funsrv.pdf">&#8220;Your server as a function&#8221;</a>), which introduces
+the key concepts behind Finagle is what made me choose the title for this post.
+I believe functional programming (FP) will be just as important to mobile
+application development in the future as it is for web development today. The
+reason is quite simple: it&#8217;s easier to write resilient code in functional languages,
+and resilience is key. Performance might be a feature, but resilience is a
+<em>must</em>. If the critical paths through your business logic are brittle, then your
+app can be as fast as light, but your users will still scoff at it and look
+elsewhere for value or entertainment.</p>
+
+<p>I write Android applications, and Java is not a functional language. It&#8217;s not
+even an object-oriented language, at least not in a puristic sense. However,
+that doesn&#8217;t stop us from adopting some of the good practices found in FP to
+improve on existing Java code. In this post I&#8217;ll try to explain how adopting
+one of the most fundamental type patterns in FP, monadic types, can dramatically
+simplify and improve the robustness of your core application logic.</p>
+
+<p>I have already written about <a href="http://mttkay.github.io/blog/2013/08/25/functional-reactive-programming-on-android-with-rxjava/">RxJava and functional reactive programming</a> and how
+we make use of it in our mobile applications at SoundCloud.
+I hope it served as a good introduction
+into using that library specifically, and how expressing expensive operations
+through Observables makes your code more resilient to failure and easier to
+compose. However, there&#8217;s a reason why Observables are so
+universally useful: they&#8217;re monads. This post is my own attempt at explaining
+monads, why they&#8217;re so valuable, and why you should consider using them.</p>
+
+<p>Before you keep reading&#8211;or, heavens forbid, consider dropping out here!&#8211;let me say that none
+of the following pragraphs will assume you have experience with FP or any functional
+language for that matter. I will use Java for all examples, so that you have
+something familiar to work with if you&#8217;re a Java (or Android) developer already.</p>
+
+<h1>Say Monad one more time&#8230;</h1>
+
+<p>It&#8217;s almost a joke these days. People hate it when FP folks start talking about
+monads. People hate it, because they have a vague idea at best of what a monad
+is, and it makes you feel like an idiot. No one wants to be an idiot! Let me
+tell you: you&#8217;re not an idiot, and monads are not difficult to understand. It&#8217;s
+just surprisingly difficult to explain them.</p>
+
+<p>I&#8217;m not a mathematician. I don&#8217;t know category theory. But I believe I have
+understood monads to a degree that I can make effective use of them in the code
+I write day in and day out, and that I can even write my own monadic types.
+Here&#8217;s another piece of good news: if you understand monads, you understand most
+of the underpinnings of functional languages. You&#8217;ll quickly find when jumping
+from one FPL to the next, monads will follow you around. It&#8217;s a bit like
+understanding classes in object-oriented languages. If all you&#8217;ve ever known is
+procedures and value types, then classes may seem odd at first. But once you
+understand classes, it doesn&#8217;t matter which OOPL you use, the concepts remain
+the same.</p>
+
+<p>So what&#8217;s a monad? I think monads are best explained (and appreciated!) by
+realizing in what poor situation you as an imperative programmer actually are.
+So I&#8217;ll start by showing you a piece of code that I bet you&#8217;ve written
+yourself in some way shape or form at some point in time,
+and then making you reflect on why your code sucks. No offense by the way, my code sucks too.
+But that&#8217;s the great thing about being a developer,
+right? We strive to make code suck a little less every single day.</p>
+
+<p>Let&#8217;s look at the example.</p>
+
+<h1>A piece of code you&#8217;ve written before</h1>
+
+<p>If you&#8217;re an app developer, chances are you connect to some service API to
+download JSON or XML that describes your business objects. At SoundCloud,
+everything evolves around tracks, so we download track metadata a lot. If
+you&#8217;re doing it right, then you&#8217;re also caching this data somewhere. It doesn&#8217;t
+really matter where or how, it could be in a database or just using flat files.
+Here&#8217;s a very typical of way of doing this in Android using the AsyncTask class:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">class</span> <span class="nc">FetchJsonObject</span> <span class="kd">extends</span> <span class="n">AsyncTask</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Void</span><span class="o">,</span> <span class="n">JsonObject</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">protected</span> <span class="n">JsonObject</span> <span class="nf">doInBackground</span><span class="o">(</span><span class="n">String</span><span class="o">...</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">final</span> <span class="n">String</span> <span class="n">url</span> <span class="o">=</span> <span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+</span><span class='line'>    <span class="n">String</span> <span class="n">json</span> <span class="o">=</span> <span class="n">serviceApi</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">url</span><span class="o">).</span><span class="na">readString</span><span class="o">();</span>
+</span><span class='line'>    <span class="n">cache</span><span class="o">.</span><span class="na">persist</span><span class="o">(</span><span class="n">url</span><span class="o">,</span> <span class="n">json</span><span class="o">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">JsonObject</span><span class="o">.</span><span class="na">parse</span><span class="o">(</span><span class="n">json</span><span class="o">);</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Don&#8217;t worry too much about what types JsonObject or serviceApi are here. This is just pseudo
+code serving to get my point across. It should still be easy to see that we&#8217;re trying
+to achieve the following:</p>
+
+<ol>
+<li>Download a JSON document from a given URL</li>
+<li>Cache it to disk using the URL as the cache key</li>
+<li>Parse it into an in-memory representation</li>
+</ol>
+
+
+<p>Instead of actually pointing out what the problem with all this is, let&#8217;s turn
+this into a short Q&amp;A. Have a look at the following questions. What are <em>your</em> answers
+to each of them?</p>
+
+<h4>Q: Every single line here can throw an exception. Where is it handled?</h4>
+
+<p>A: Simple, you wrap everything in a try/catch block. Fair enough. Then what?
+How do you propagate the exception to the caller? Recall that this job is running
+on a background thread, so there might be visibility issues. Moreover, how do
+you signal the error? You have to return something from <code>doInBackground</code>. Thinking
+about returning null? You might want to listen to what <a href="http://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare">Tony Hoare has to say about
+null references</a> (he invented them by the way.)</p>
+
+<h4>Q: If the API request fails, what do we return?</h4>
+
+<p>A: Easy, we return null! Sorry, but <a href="http://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare">Tony Hoare says NO</a>, so let&#8217;s put our
+foot down on that one okay?</p>
+
+<h4>Q: If the API request succeeds but caching fails, do we throw out the result?</h4>
+
+<p>A: Uhm, maybe? We haven&#8217;t really thought about how to propagate the data in this
+series of steps. Aha! There&#8217;s our first clue about what a monad is: transporting
+data as a series of steps. I&#8217;ll pick this up again later.</p>
+
+<h4>Q: Should caching to local storage happen on the same thread as sending API requests?</h4>
+
+<p>A: Probably not. Because this could mean that API requests block local storage
+I/O from happening in case they take longer than expected, right? It almost looks
+as if caching to local storage should happen in its own task. Or maybe it
+has something to do with propagating data as a series of steps&#8230; (This is where
+you should picture me waving a flag in your face that says monad on it.)</p>
+
+<h4>Q: If I want to just make an API request/just cache to local storage, do I write a new AsyncTask for each?</h4>
+
+<p>A: I suppose so. If we did that, however, how would be combine them to arrive
+at the definition above, which performs both steps in succession and pipes data
+from one task to the next? I smell sulfur, we might be well on our way to <a href="http://ianbishop.github.io/blog/2013/01/13/escape-from-callback-hell/">callback hell</a>.</p>
+
+<p>I hope the picture begins taking shape. It appears there are a number of related
+problems here, most of them having to do with <em>processing data as a series of
+potentially asynchronous steps where failure in each step is anticipated.</em></p>
+
+<p>Let&#8217;s finally look at what monads are and how they solve this for us.</p>
+
+<h1>Monads explained</h1>
+
+<p>We&#8217;ll get a little more concrete now and jump straight into the definition of
+what monads are and what has to hold true for a monad to actually be a monad.
+I then show how a simple monadic type could look like in Java.</p>
+
+<p>Let&#8217;s first look at some of the existing definitions that attempt to put
+monads in a single sentence. Erik Meijer, the man behind the <a href="https://rx.codeplex.com/">Reactive Extensions</a>
+and my personal hero for wearing a SoundCloud t-shirt on stage at GOTO Berlin,
+has this to say about monads:</p>
+
+<blockquote><p>Monads are return types that guide you through the happy path.</p></blockquote>
+
+<p>This might be my favorite definition, because it catches the gist of what monads are
+all about. However, it&#8217;s still a bit vague and doesn&#8217;t really help in understanding
+what the structure of a monad is. Martin Odersky, EPFL fame and inventor of the
+Scala programming language looks at it this way:</p>
+
+<blockquote><p>Monads are parametric types with two operations flatMap and unit that obey some algebraic laws.</p></blockquote>
+
+<p>So this is rather the opposite: this definition doesn&#8217;t really tell us what monads
+are good for, but it contains some important clues about their structure, i.e. they
+are types, parameterized over another type, and they consist of just two operations.
+I told you monads were simple!</p>
+
+<p>Both these definitions I took almost verbatim from the reactive programming course
+on Coursera, which I highly recommend. Let&#8217;s have a look at what Wikipedia has to say:</p>
+
+<blockquote><p>Monads are structures that represent computations defined as sequences of steps.</p></blockquote>
+
+<p>Sounds familiar? I told you I&#8217;d come back to the whole sequence of steps thing.
+Finally, here&#8217;s my own attempt at putting monads in a sentence, and it&#8217;s the definition
+I will use throughout the rest of this article:</p>
+
+<blockquote><p>Monads are chainable container types that trap values or computations and allow them to be transformed in confinement.</p></blockquote>
+
+<p>The key take away from this definition are the &#8220;three Cs&#8221;:
+<strong>containment, chainability, and confinement.</strong></p>
+
+<p>I will now explain how monads enable these properties for arbitrary data or
+computations and why that&#8217;s super awesome.</p>
+
+<h2>Monads are types</h2>
+
+<p>We just learned that monads are parametric types that define just two operations, <code>unit</code>
+(also called return) and <code>flatMap</code> (also called bind or mapMany). I will
+show you shortly what these methods do and what a full definition of a monad
+looks like in Java, but just to put your worries to rest a little: if you&#8217;ve used
+Scala or RxJava before, then you&#8217;ve already seen and used
+monads. All lists in Scala are monads with the <code>List</code> constructor method as
+unit and a flatMap method to transform them. Observables in RxJava are monads
+with <code>Observable.from</code> as unit and mapMany to transform them
+(mapMany in RxJava is actually aliased to flatMap, so you can use either one.)</p>
+
+<p>That said, let&#8217;s have a look at the structure of a monadic type in Java:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Monad</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>  <span class="kd">private</span> <span class="n">T</span> <span class="n">value</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">private</span> <span class="nf">Monad</span><span class="o">(</span><span class="n">T</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">Monad</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">unit</span><span class="o">(</span><span class="n">T</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">new</span> <span class="nf">Monad</span><span class="o">(</span><span class="n">value</span><span class="o">);</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">public</span> <span class="o">&lt;</span><span class="n">R</span><span class="o">&gt;</span> <span class="n">Monad</span><span class="o">&lt;</span><span class="n">R</span><span class="o">&gt;</span> <span class="n">flatMap</span><span class="o">(</span><span class="n">Func1</span><span class="o">&lt;</span><span class="n">T</span><span class="o">,</span> <span class="n">Monad</span><span class="o">&lt;</span><span class="n">R</span><span class="o">&gt;&gt;</span> <span class="n">func</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">func</span><span class="o">.</span><span class="na">call</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">value</span><span class="o">);</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">public</span> <span class="n">T</span> <span class="nf">get</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">value</span><span class="o">;</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I&#8217;ve added a third method here, <code>get</code>, but it&#8217;s hardly worth talking about a
+getter function, so let&#8217;s skip it as part of the discussion and turn straight
+to <code>unit</code> and <code>flatMap</code>.</p>
+
+<h2>The 1st C: unit enables containment</h2>
+
+<p>There&#8217;s an obvious take away from the snippet above: a monad is defined over a type <code>T</code> which
+it contains values of. Containment here is enabled by the <code>unit</code> function: it takes a <code>T</code>
+and traps it in the monad by creating a new instance of the monad with that value
+passed into it. At this point I should mention that <code>T</code> can be anything, including
+collection types like lists. Remember RxJava and observables? An Observable is
+a monad defined over collections of values. Let&#8217;s keep things simple though
+and let&#8217;s create a monad of integers:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">Monad</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">intMonad</span> <span class="o">=</span> <span class="n">Monad</span><span class="o">.</span><span class="na">unit</span><span class="o">(</span><span class="mi">2</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So we stuff the number 2 in our monad. Cool, but not so useful thus far.
+What makes it useful is the flatMap method, so let&#8217;s turn to flatMap.</p>
+
+<h2>The 2nd C: flatMap enables chainability</h2>
+
+<p>I admit this one might look a bit more puzzling, but it&#8217;s
+actually pretty straight forward once you look past the awkward syntax. The <code>flatMap</code>
+function itself is defined over a new type variable, <code>R</code>, and it returns a new monad
+of that type <code>Monad&lt;R&gt;</code>. It does so, however, not just by trapping the value in it like
+unit does, but by applying a function to the current value, a function which
+knows how to turn <code>T</code>s into monads of <code>R</code>. (I borrowed the <code>Func1</code> type from
+RxJava here: it means it&#8217;s a function object that takes 1 argument of type <code>T</code>
+and returns something of type <code>Monad&lt;R&gt;</code>.)</p>
+
+<p>Let this sink in for a second, since this is perhaps the most important aspect
+of monads. It&#8217;s important because it allows us to chain monads together using
+transformations of the values they contain. I can take a monad containing, say,
+an integer, and flatMap it using a function which takes this integer, transforms
+it (say, by taking the square root of that number) and sticking it in a new monad. The last part
+is critical, since it means we can do this forever and ever, because the return
+value will be a monad again with a flatMap function which can again take a
+function which returns another monad which has&#8230; you get the idea.</p>
+
+<p>Let&#8217;s take the square root example using the monad we just created:</p>
+
+<figure class='code'> <div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kt">double</span> <span class="n">result</span> <span class="o">=</span> <span class="n">intMonad</span><span class="o">.</span><span class="na">flatMap</span><span class="o">(</span><span class="k">new</span> <span class="n">Func1</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">Monad</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;&gt;()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">Monad</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span> <span class="nf">call</span><span class="o">(</span><span class="n">Integer</span> <span class="n">input</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">Monad</span><span class="o">.</span><span class="na">unit</span><span class="o">(</span><span class="n">Math</span><span class="o">.</span><span class="na">sqrt</span><span class="o">(</span><span class="n">input</span><span class="o">));</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}).</span><span class="na">get</span><span class="o">();</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now that looks more useful! What we&#8217;ve done here is take our initial integer
+monad and transformed it using flatMap to obtain a new monad of type <code>Monad&lt;Double&gt;</code>
+that contains the square root of the initial value. This is fundamentally
+different from applying the <code>sqrt</code> function directly to some input, since
+there&#8217;s no flatMap method defined on <code>double</code> that you could use to apply
+further transformations, so you&#8217;d effectivly lose the property of chainability.</p>
+
+<p>This also enables entirely new perspectives in terms of code structure and reuse:
+since the monad structure never changes, your business logic is
+entirely expressed in terms of functions, which transform values step wise,
+are defined and tested in isolation, and composed together to form new
+pieces of functionality. It&#8217;s like Legos, but using functions.</p>
+
+<h2>The 3rd C: To be continued&#8230;</h2>
+
+<p>If you paid attention at the beginning, you might have noticed that the &#8220;3rd C&#8221;, namely
+confinement is still missing. This is because is has to do
+with the algebraic laws a monad has to obey. Frankly, I haven&#8217;t been completely honest with you.
+Our sample type follows a monadic structure, but purists will say it&#8217;s not
+actually a monad. There&#8217;s a more subtle aspect of flatMap than just being able
+to chain things together, and it has all to do with making monads resilient
+and not allowing things to leak out of the monad.</p>
+
+<p>Why that is the case, how it has to do with the three monad laws, and how we
+can piece everything together to turn our initial AsyncTask example into
+something fundamentally better using monads is what I will cover in part 2 of this article.</p>
+</div>
+
+
+<div class="meta">
+	<div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-01-25T09:15:00+01:00" pubdate data-updated="true">Jan 25<span>th</span>, 2014</time></div>
+	<div class="tags">
+
+
+	<a class='category' href='/blog/categories/functional-programming/'>functional programming</a>, <a class='category' href='/blog/categories/monads/'>monads</a>, <a class='category' href='/blog/categories/rxjava/'>rxjava</a>
+
+
+</div>
+	
+</div>
+</article>
+
+	<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+		
+		
+		<a class="addthis_button_tweet"></a>
+		
+		
+		<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+		
+		
+	</div>
+	
+</div>
+
+
+</div>
+	<footer id="footer" class="inner">Copyright &copy; 2014
+
+    Matthias Käppler
+
+</footer>
+	<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-38754031-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+</body>
+</html>
