@@ -3,7 +3,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Monads: Your App As A Function - mttkay here.</title>
+	<title>Monads: Your App As A Function, Part 1 - mttkay here.</title>
 	<meta name="author" content="Matthias Käppler">
 
 	
@@ -95,11 +95,17 @@ the key concepts behind Finagle is what made me &hellip;">
 
 	
 	<div id="content" class="inner"><article class="post">
-	<h2 class="title">Monads: Your App as a Function</h2>
+	<h2 class="title">Monads: Your App as a Function, Part 1</h2>
 	<div class="entry-content"><p>A paper by Twitter&#8217;s Marius Eriksen (<a href="http://monkey.org/~marius/funsrv.pdf">&#8220;Your server as a function&#8221;</a>), which introduces
 the key concepts behind Finagle is what made me choose the title for this post.
 I believe functional programming (FP) will be just as important to mobile
-application development in the future as it is for web development today. The
+application development in the future as it is for web development today.
+Since I first jumped the &#8220;reactive bandwagon&#8221; about a year ago, other companies
+like Parse/Facebook and Spotify have started to move to functional programming
+on mobile to simplify concurrent programming (via the <a href="https://github.com/BoltsFramework">BoltsFramework</a> and
+<a href="https://github.com/spotify/trickle">trickle</a> library respectively.)</p>
+
+<p>The
 reason is quite simple: it&#8217;s easier to write resilient code in functional languages,
 and resilience is key. Performance might be a feature, but resilience is a
 <em>must</em>. If the critical paths through your business logic are brittle, then your
@@ -114,11 +120,13 @@ one of the most fundamental type patterns in FP, monadic types, can dramatically
 simplify and improve the robustness of your core application logic.</p>
 
 <p>I have already written about <a href="http://mttkay.github.io/blog/2013/08/25/functional-reactive-programming-on-android-with-rxjava/">RxJava and functional reactive programming</a> and how
-we make use of it in our mobile applications at SoundCloud.
+we make use of it in our mobile applications at SoundCloud.<br/>
 I hope it served as a good introduction
 into using that library specifically, and how expressing expensive operations
 through Observables makes your code more resilient to failure and easier to
-compose. However, there&#8217;s a reason why Observables are so
+compose.</p>
+
+<p>However, there&#8217;s a reason why Observables are so
 universally useful: they&#8217;re monads. This post is my own attempt at explaining
 monads, why they&#8217;re so valuable, and why you should consider using them.</p>
 
@@ -233,7 +241,7 @@ you should picture me waving a flag in your face that says monad on it.)</p>
 
 <h4>Q: If I want to just make an API request/just cache to local storage, do I write a new AsyncTask for each?</h4>
 
-<p>A: I suppose so. If we did that, however, how would be combine them to arrive
+<p>A: I suppose so. If we did that, however, how would we combine them to arrive
 at the definition above, which performs both steps in succession and pipes data
 from one task to the next? I smell sulfur, we might be well on our way to <a href="http://ianbishop.github.io/blog/2013/01/13/escape-from-callback-hell/">callback hell</a>.</p>
 
@@ -417,13 +425,11 @@ pieces of functionality. It&#8217;s like Legos, but using functions.</p>
 <p>If you paid attention at the beginning, you might have noticed that the &#8220;3rd C&#8221;, namely
 confinement is still missing. This is because is has to do
 with the algebraic laws a monad has to obey. Frankly, I haven&#8217;t been completely honest with you.
-Our sample type follows a monadic structure, but purists will say it&#8217;s not
-actually a monad. There&#8217;s a more subtle aspect of flatMap than just being able
-to chain things together, and it has all to do with making monads resilient
-and not allowing things to leak out of the monad.</p>
+Types with <code>unit</code> and <code>flatMap</code> follow a monadic structure, but purists will say they&#8217;re not
+actually monads unless they obey some algebraic laws.</p>
 
-<p>Why that is the case, how it has to do with the three monad laws, and how we
-can piece everything together to turn our initial AsyncTask example into
+<p>What the three monad laws are, what implications they have, and how we
+can piece everything together to turn our initial <code>AsyncTask</code> example into
 something fundamentally better using monads is what I will cover in part 2 of this article.</p>
 </div>
 
