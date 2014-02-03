@@ -190,7 +190,7 @@ That is, given two monad types <code>M1</code> and <code>M2</code>, instead of s
 <p>You can say:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>result = M2.unit(x).flatMap(f).get();</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>result = M1.unit(x).flatMap(f).get();</span></code></pre></td></tr></table></div></figure>
 
 
 <p>That is, we have obtained the result without explicitly peeking at <code>x</code> simply

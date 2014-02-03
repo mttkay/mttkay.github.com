@@ -4,7 +4,7 @@
   <title><![CDATA[Category: rxjava | mttkay here.]]></title>
   <link href="http://mttkay.github.com/blog/categories/rxjava/atom.xml" rel="self"/>
   <link href="http://mttkay.github.com/"/>
-  <updated>2014-02-01T18:50:27+01:00</updated>
+  <updated>2014-02-03T12:21:50+01:00</updated>
   <id>http://mttkay.github.com/</id>
   <author>
     <name><![CDATA[Matthias Käppler]]></name>
@@ -107,7 +107,7 @@ result = m2.get();
 <p>You can say:</p>
 
 <p><code>
-result = M2.unit(x).flatMap(f).get();
+result = M1.unit(x).flatMap(f).get();
 </code></p>
 
 <p>That is, we have obtained the result without explicitly peeking at <code>x</code> simply
