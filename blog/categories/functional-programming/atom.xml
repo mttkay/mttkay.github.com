@@ -4,7 +4,7 @@
   <title><![CDATA[Category: functional programming | mttkay here.]]></title>
   <link href="http://mttkay.github.com/blog/categories/functional-programming/atom.xml" rel="self"/>
   <link href="http://mttkay.github.com/"/>
-  <updated>2014-02-03T12:21:50+01:00</updated>
+  <updated>2014-02-04T10:37:21+01:00</updated>
   <id>http://mttkay.github.com/</id>
   <author>
     <name><![CDATA[Matthias Käppler]]></name>
@@ -543,9 +543,9 @@ with <code>Observable.from</code> as unit and mapMany to transform them
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="o">}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="kd">public</span> <span class="kd">static</span> <span class="n">Monad</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">unit</span><span class="o">(</span><span class="n">T</span> <span class="n">value</span><span class="o">)</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="kd">public</span> <span class="kd">static</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Monad</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">unit</span><span class="o">(</span><span class="n">T</span> <span class="n">value</span><span class="o">)</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 </span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">return</span> <span class="k">new</span> <span class="n">Monad</span><span class="o">(</span><span class="n">value</span><span class="o">);</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">return</span> <span class="k">new</span> <span class="n">Monad</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">T</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;(</span><span class="n">value</span><span class="o">);</span>
 </span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="o">}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
